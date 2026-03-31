@@ -1,24 +1,25 @@
 package app.cookyourbooks.gui.viewmodel;
 
-import app.cookyourbooks.gui.BackgroundTaskRunner;
-import app.cookyourbooks.model.Recipe;
-import app.cookyourbooks.model.RecipeCollection;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.jspecify.annotations.NullMarked;
+import javafx.util.Duration;
 
-import app.cookyourbooks.gui.NavigationService;
-import app.cookyourbooks.services.LibrarianService;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import javafx.util.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import app.cookyourbooks.gui.BackgroundTaskRunner;
+import app.cookyourbooks.gui.NavigationService;
+import app.cookyourbooks.model.Recipe;
+import app.cookyourbooks.model.RecipeCollection;
+import app.cookyourbooks.services.LibrarianService;
 
 /** Implementation for the Library View Model. */
 @NullMarked
@@ -45,15 +46,16 @@ public class LibraryViewModelImpl implements LibraryViewModel {
   /* Private Helpers */
 
   /**
-   * Sets the property of whether undo recipe collection deletion is available.
-   * If there are recipes marked as deletion-pending, then they can still be undone.
+   * Sets the property of whether undo recipe collection deletion is available. If there are recipes
+   * marked as deletion-pending, then they can still be undone.
    */
   private void setUndoAvailable() {
     this.undoAvailableProperty.set(!this.recipeCollectionsPendingDelete.isEmpty());
 
     // set to the oldest deleted recipe
     if (!this.recipeCollectionsPendingDelete.isEmpty()) {
-      this.undoMessageProperty.set("Deleted: %s".formatted(this.recipeCollectionsPendingDelete.getFirst().getTitle()));
+      this.undoMessageProperty.set(
+          "Deleted: %s".formatted(this.recipeCollectionsPendingDelete.getFirst().getTitle()));
     }
   }
 
@@ -65,7 +67,7 @@ public class LibraryViewModelImpl implements LibraryViewModel {
    * @param navigationService implementation for the NavigationService
    */
   public LibraryViewModelImpl(
-          LibrarianService librarianService, NavigationService navigationService, Duration undoWindow) {
+      LibrarianService librarianService, NavigationService navigationService, Duration undoWindow) {
     this.librarianService = librarianService;
     this.navigationService = navigationService;
     this.undoWindow = undoWindow;
@@ -119,17 +121,31 @@ public class LibraryViewModelImpl implements LibraryViewModel {
   @Override
   public void refresh() {
     loadingProperty.set(true);
-    BackgroundTaskRunner.run(librarianService::listCollections, result -> {
-      recipeCollections.clear();
-      recipeCollections.addAll(result);
-      collectionMeta.addAll(result.stream()
-              // any collection that has an id pending deletion should not be shown to the user
-              .filter(rc -> recipeCollectionsPendingDelete.stream().noneMatch(rd -> rd.getId().equals(rc.getId())))
-              .map(rc -> new RecipeCollectionSummary(rc.getId(), rc.getTitle(), rc.getSourceType(), rc.getRecipes().size())).toList());
-      loadingProperty.set(false);
-    }, err -> {
-      // TODO: Handle Loading Error
-    });
+    BackgroundTaskRunner.run(
+        librarianService::listCollections,
+        result -> {
+          recipeCollections.clear();
+          recipeCollections.addAll(result);
+          collectionMeta.addAll(
+              result.stream()
+                  // any collection that has an id pending deletion should not be shown to the user
+                  .filter(
+                      rc ->
+                          recipeCollectionsPendingDelete.stream()
+                              .noneMatch(rd -> rd.getId().equals(rc.getId())))
+                  .map(
+                      rc ->
+                          new RecipeCollectionSummary(
+                              rc.getId(),
+                              rc.getTitle(),
+                              rc.getSourceType(),
+                              rc.getRecipes().size()))
+                  .toList());
+          loadingProperty.set(false);
+        },
+        err -> {
+          // TODO: Handle Loading Error
+        });
   }
 
   @Override
@@ -137,7 +153,9 @@ public class LibraryViewModelImpl implements LibraryViewModel {
     recipesProperty.clear();
     selectedCollection = null;
 
-    if (collectionId == null) { return; } // we can just clear out the selected collection
+    if (collectionId == null) {
+      return;
+    } // we can just clear out the selected collection
     Optional<RecipeCollection> recipeCollection = librarianService.findCollectionById(collectionId);
 
     // should never happen, but just in case
@@ -153,7 +171,9 @@ public class LibraryViewModelImpl implements LibraryViewModel {
 
   @Override
   public void createCollection(String title) {
-    if (title.isBlank()) { throw new IllegalArgumentException("Title must not be blank."); }
+    if (title.isBlank()) {
+      throw new IllegalArgumentException("Title must not be blank.");
+    }
     librarianService.createCollection(title);
   }
 
@@ -163,7 +183,8 @@ public class LibraryViewModelImpl implements LibraryViewModel {
     // undo window is provided
 
     // find the collection with that id
-    Optional<RecipeCollection> toDelete = recipeCollections.stream().filter(rc -> rc.getId().equals(collectionId)).findFirst();
+    Optional<RecipeCollection> toDelete =
+        recipeCollections.stream().filter(rc -> rc.getId().equals(collectionId)).findFirst();
 
     if (toDelete.isEmpty()) {
       // should never happen
@@ -176,19 +197,23 @@ public class LibraryViewModelImpl implements LibraryViewModel {
     refresh(); // hide the deletion-pending recipe
 
     // after 5sec, see if it's still deletion-marked
-    BackgroundTaskRunner.run(() -> {
-      Thread.sleep((long) undoWindow.toMillis());
-      return undoWindow.toMillis();
-    }, (result) -> {
-      if (recipeCollectionsPendingDelete.stream().anyMatch(rc -> rc.getId().equals(collectionId))) {
-        // fully process the deletion
-        recipeCollectionsPendingDelete.removeIf(rc -> rc.getId().equals(collectionId));
-        librarianService.deleteCollection(collectionId);
-        setUndoAvailable();
-      }
-    }, (err) -> {
-      // TODO: handle err
-    });
+    BackgroundTaskRunner.run(
+        () -> {
+          Thread.sleep((long) undoWindow.toMillis());
+          return undoWindow.toMillis();
+        },
+        (result) -> {
+          if (recipeCollectionsPendingDelete.stream()
+              .anyMatch(rc -> rc.getId().equals(collectionId))) {
+            // fully process the deletion
+            recipeCollectionsPendingDelete.removeIf(rc -> rc.getId().equals(collectionId));
+            librarianService.deleteCollection(collectionId);
+            setUndoAvailable();
+          }
+        },
+        (err) -> {
+          // TODO: handle err
+        });
   }
 
   @Override
@@ -198,12 +223,12 @@ public class LibraryViewModelImpl implements LibraryViewModel {
     recipeCollectionsPendingDelete.removeFirst(); // pop
     setUndoAvailable();
     refresh();
-
   }
 
   @Override
   public void selectRecipe(String recipeId) {
-    Optional<Recipe> selectedRecipe = recipesProperty.stream().filter(r -> r.getId().equals(recipeId)).findFirst();
+    Optional<Recipe> selectedRecipe =
+        recipesProperty.stream().filter(r -> r.getId().equals(recipeId)).findFirst();
 
     // should never happen, but just in case
     if (selectedRecipe.isEmpty()) {
@@ -211,9 +236,8 @@ public class LibraryViewModelImpl implements LibraryViewModel {
       return;
     }
 
-    // open in recipe vm
-    navigationService.selectedRecipeIdProperty().set(recipeId);
-    navigationService.navigateTo(NavigationService.View.RECIPE_EDITOR);
+    // open in recipe view
+    navigationService.navigateToRecipe(recipeId);
   }
 
   /* Non-JavaFX accessors */

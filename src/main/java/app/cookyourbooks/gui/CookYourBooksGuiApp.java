@@ -8,8 +8,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-
 import javafx.util.Duration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,7 +100,7 @@ public class CookYourBooksGuiApp extends Application {
     // ── 6. Load the main layout and show the window ──
     try {
       FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("/fxml/MainView.fxml"));
-      mainLoader.setControllerFactory(clazz -> mainController);
+      mainLoader.setController(mainController);
       Parent root = mainLoader.load();
 
       Scene scene = new Scene(root, 960, 640);
