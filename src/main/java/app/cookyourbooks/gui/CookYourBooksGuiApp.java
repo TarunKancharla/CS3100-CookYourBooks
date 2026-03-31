@@ -87,7 +87,7 @@ public class CookYourBooksGuiApp extends Application {
     // ── 6. Load the main layout and show the window ──
     try {
       FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("/fxml/MainView.fxml"));
-      mainLoader.setControllerFactory(clazz -> mainController);
+      mainLoader.setController(mainController);
       Parent root = mainLoader.load();
 
       Scene scene = new Scene(root, 960, 640);
