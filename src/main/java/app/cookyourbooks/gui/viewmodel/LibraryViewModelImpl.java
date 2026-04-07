@@ -2,6 +2,7 @@ package app.cookyourbooks.gui.viewmodel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import javafx.beans.property.BooleanProperty;
@@ -59,6 +60,28 @@ public class LibraryViewModelImpl implements LibraryViewModel {
     }
   }
 
+  private void exposeFilteredCollections() {
+    collectionMeta.clear();
+    collectionMeta.addAll(
+        recipeCollections.stream()
+            // any collection that has an id pending deletion should not be shown to the user
+            .filter(
+                rc ->
+                    recipeCollectionsPendingDelete.stream()
+                        .noneMatch(rd -> rd.getId().equals(rc.getId())))
+            // any collection that does not match filter text should not be shown to the user
+            .filter(
+                rc ->
+                    rc.getTitle()
+                        .toUpperCase(Locale.ROOT)
+                        .contains(filterTextProperty.get().toUpperCase(Locale.ROOT)))
+            .map(
+                rc ->
+                    new RecipeCollectionSummary(
+                        rc.getId(), rc.getTitle(), rc.getSourceType(), rc.getRecipes().size()))
+            .toList());
+  }
+
   /* Constructor */
   /**
    * Constructor for the Library View Model implementation. Dependencies should be injected.
@@ -79,11 +102,15 @@ public class LibraryViewModelImpl implements LibraryViewModel {
 
     // instantiate ViewModel values
     filterTextProperty = new SimpleStringProperty();
+    filterTextProperty.set("");
     loadingProperty = new SimpleBooleanProperty();
     undoAvailableProperty = new SimpleBooleanProperty();
     undoMessageProperty = new SimpleStringProperty();
     collectionMeta = FXCollections.observableArrayList();
     recipesProperty = FXCollections.observableArrayList();
+
+    // update filter text dynamically
+    filterTextProperty.addListener(ignored -> this.exposeFilteredCollections());
   }
 
   /* Observable Properties */
@@ -126,21 +153,7 @@ public class LibraryViewModelImpl implements LibraryViewModel {
         result -> {
           recipeCollections.clear();
           recipeCollections.addAll(result);
-          collectionMeta.addAll(
-              result.stream()
-                  // any collection that has an id pending deletion should not be shown to the user
-                  .filter(
-                      rc ->
-                          recipeCollectionsPendingDelete.stream()
-                              .noneMatch(rd -> rd.getId().equals(rc.getId())))
-                  .map(
-                      rc ->
-                          new RecipeCollectionSummary(
-                              rc.getId(),
-                              rc.getTitle(),
-                              rc.getSourceType(),
-                              rc.getRecipes().size()))
-                  .toList());
+          this.exposeFilteredCollections();
           loadingProperty.set(false);
         },
         err -> {
@@ -199,8 +212,8 @@ public class LibraryViewModelImpl implements LibraryViewModel {
     // after 5sec, see if it's still deletion-marked
     BackgroundTaskRunner.run(
         () -> {
-          Thread.sleep((long) undoWindow.toMillis());
-          return undoWindow.toMillis();
+          Thread.sleep((long) undoWindow.toMillis() * 1000);
+          return undoWindow.toMillis() * 1000;
         },
         (result) -> {
           if (recipeCollectionsPendingDelete.stream()
