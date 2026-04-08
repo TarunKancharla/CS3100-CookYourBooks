@@ -4,10 +4,15 @@ import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+
+import org.jspecify.annotations.Nullable;
 
 import app.cookyourbooks.gui.viewmodel.RecipeEditorViewModelImpl;
 import app.cookyourbooks.gui.viewmodel.RecipeEditorViewModelImpl.IngredientEntry;
@@ -46,6 +51,7 @@ public class RecipeEditorViewController {
         .editableProperty()
         .bind(viewModel.editingProperty().and(viewModel.isSavingProperty().not()));
     ingredientsList.setItems(viewModel.ingredientsProperty());
+    ingredientsList.setCellFactory(list -> new IngredientCell(viewModel));
     statusLabel.textProperty().bind(viewModel.statusMessageProperty());
     editButton
         .textProperty()
@@ -144,5 +150,65 @@ public class RecipeEditorViewController {
             event.consume();
           }
         });
+
+    instructionsArea.setOnKeyPressed(
+        event -> {
+          if (event.isShortcutDown() && event.getCode() == KeyCode.S) {
+            viewModel.save();
+            event.consume();
+          }
+        });
+    titleField.setOnKeyPressed(
+        event -> {
+          if (event.isShortcutDown() && event.getCode() == KeyCode.S) {
+            viewModel.save();
+            event.consume();
+          }
+        });
+    descriptionArea.setOnKeyPressed(
+        event -> {
+          if (event.isShortcutDown() && event.getCode() == KeyCode.S) {
+            viewModel.save();
+            event.consume();
+          }
+        });
+  }
+
+  private static final class IngredientCell extends ListCell<IngredientEntry> {
+    private final TextField nameField = new TextField();
+    private final TextField descriptionField = new TextField();
+    private final HBox container = new HBox(8, nameField, descriptionField);
+    private @Nullable IngredientEntry boundItem;
+
+    private IngredientCell(RecipeEditorViewModelImpl viewModel) {
+      HBox.setHgrow(nameField, Priority.ALWAYS);
+      HBox.setHgrow(descriptionField, Priority.ALWAYS);
+      nameField.setPromptText("Ingredient");
+      descriptionField.setPromptText("Description");
+      nameField
+          .disableProperty()
+          .bind(viewModel.editingProperty().not().or(viewModel.isSavingProperty()));
+      descriptionField
+          .disableProperty()
+          .bind(viewModel.editingProperty().not().or(viewModel.isSavingProperty()));
+    }
+
+    @Override
+    protected void updateItem(IngredientEntry item, boolean empty) {
+      super.updateItem(item, empty);
+      if (boundItem != null) {
+        nameField.textProperty().unbindBidirectional(boundItem.nameProperty());
+        descriptionField.textProperty().unbindBidirectional(boundItem.descriptionProperty());
+        boundItem = null;
+      }
+      if (empty || item == null) {
+        setGraphic(null);
+        return;
+      }
+      boundItem = item;
+      nameField.textProperty().bindBidirectional(item.nameProperty());
+      descriptionField.textProperty().bindBidirectional(item.descriptionProperty());
+      setGraphic(container);
+    }
   }
 }

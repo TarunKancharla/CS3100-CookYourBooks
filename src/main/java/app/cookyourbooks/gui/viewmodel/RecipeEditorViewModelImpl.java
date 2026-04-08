@@ -1,6 +1,7 @@
 package app.cookyourbooks.gui.viewmodel;
 
 import java.util.List;
+import java.util.Objects;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -20,7 +21,48 @@ import app.cookyourbooks.model.VagueIngredient;
 import app.cookyourbooks.repository.RecipeRepository;
 
 public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
-  public record IngredientEntry(String name, String description) {}
+  public static final class IngredientEntry {
+    private final StringProperty name;
+    private final StringProperty description;
+
+    public IngredientEntry(String name, String description) {
+      this.name = new SimpleStringProperty(name);
+      this.description = new SimpleStringProperty(description);
+    }
+
+    public StringProperty nameProperty() {
+      return name;
+    }
+
+    public StringProperty descriptionProperty() {
+      return description;
+    }
+
+    public String name() {
+      return name.get();
+    }
+
+    public String description() {
+      return description.get();
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (!(obj instanceof IngredientEntry other)) {
+        return false;
+      }
+      return Objects.equals(name(), other.name())
+          && Objects.equals(description(), other.description());
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(name(), description());
+    }
+  }
 
   private final RecipeRepository recipeRepository;
   private final StringProperty title = new SimpleStringProperty("");
@@ -49,6 +91,18 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
         });
     description.addListener((obs, oldValue, newValue) -> updateDirtyState());
     instructions.addListener((obs, oldValue, newValue) -> updateDirtyState());
+    ingredients.addListener(
+        (javafx.collections.ListChangeListener<? super IngredientEntry>)
+            change -> {
+              while (change.next()) {
+                if (change.wasAdded()) {
+                  for (IngredientEntry entry : change.getAddedSubList()) {
+                    bindIngredientEntry(entry);
+                  }
+                }
+              }
+              updateDirtyState();
+            });
     navigation
         .selectedRecipeIdProperty()
         .addListener(
@@ -118,7 +172,7 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
     loadedTitle = title.get().trim();
     loadedDescription = description.get().trim();
     loadedInstructions = instructions.get().trim();
-    loadedIngredients = List.copyOf(ingredients);
+    loadedIngredients = snapshotIngredients(ingredients);
     isDirty.set(false);
     statusMessage.set("Loaded recipe.");
   }
@@ -174,7 +228,7 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
           loadedTitle = saved.getTitle().trim();
           loadedDescription = description.get().trim();
           loadedInstructions = instructions.get().trim();
-          loadedIngredients = List.copyOf(ingredients);
+          loadedIngredients = snapshotIngredients(ingredients);
           isDirty.set(false);
           isSaving.set(false);
           editing.set(false);
@@ -197,7 +251,7 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
     title.set(loadedTitle);
     description.set(loadedDescription);
     instructions.set(loadedInstructions);
-    ingredients.setAll(loadedIngredients);
+    ingredients.setAll(snapshotIngredients(loadedIngredients));
     suppressDirtyTracking = false;
     isDirty.set(false);
     statusMessage.set("Changes discarded.");
@@ -299,6 +353,17 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
 
   private IngredientEntry toIngredientEntry(Ingredient ingredient) {
     return new IngredientEntry(ingredient.getName(), ingredient.toString());
+  }
+
+  private void bindIngredientEntry(IngredientEntry entry) {
+    entry.nameProperty().addListener((obs, oldValue, newValue) -> updateDirtyState());
+    entry.descriptionProperty().addListener((obs, oldValue, newValue) -> updateDirtyState());
+  }
+
+  private List<IngredientEntry> snapshotIngredients(List<IngredientEntry> source) {
+    return source.stream()
+        .map(entry -> new IngredientEntry(entry.name(), entry.description()))
+        .toList();
   }
 
   private void loadInstructionText(Recipe recipe) {
