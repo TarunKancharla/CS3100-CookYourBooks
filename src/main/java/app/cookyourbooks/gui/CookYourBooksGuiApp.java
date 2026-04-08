@@ -85,7 +85,8 @@ public class CookYourBooksGuiApp extends Application {
     //   mainController.setViewNode(NavigationService.View.LIBRARY, libraryView);
 
     // TODO: Wire Library View (use librarianService)
-    var libraryVm = new LibraryViewModelImpl(librarianService, navigationService, new Duration(5));
+    var libraryVm =
+        new LibraryViewModelImpl(librarianService, navigationService, Duration.seconds(5));
     FXMLLoader libraryLoader = new FXMLLoader(getClass().getResource("/fxml/LibraryView.fxml"));
     libraryLoader.setControllerFactory(c -> new LibraryViewController(libraryVm));
     try {
