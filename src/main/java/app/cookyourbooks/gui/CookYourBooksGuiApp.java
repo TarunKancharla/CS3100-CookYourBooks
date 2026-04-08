@@ -9,14 +9,17 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import app.cookyourbooks.CybLibrary;
+import app.cookyourbooks.gui.view.LibraryViewController;
 import app.cookyourbooks.gui.view.MainViewController;
 import app.cookyourbooks.gui.view.SearchViewController;
 import app.cookyourbooks.gui.viewmodel.SearchViewModelImpl;
+import app.cookyourbooks.gui.viewmodel.LibraryViewModelImpl;
 import app.cookyourbooks.services.LibrarianServiceImpl;
 
 /**
@@ -83,6 +86,16 @@ public class CookYourBooksGuiApp extends Application {
     //   mainController.setViewNode(NavigationService.View.LIBRARY, libraryView);
 
     // TODO: Wire Library View (use librarianService)
+    var libraryVm = new LibraryViewModelImpl(librarianService, navigationService, new Duration(5));
+    FXMLLoader libraryLoader = new FXMLLoader(getClass().getResource("/fxml/LibraryView.fxml"));
+    libraryLoader.setControllerFactory(c -> new LibraryViewController(libraryVm));
+    try {
+      Parent libraryView = libraryLoader.load();
+      mainController.setViewNode(NavigationService.View.LIBRARY, libraryView);
+    } catch (IOException e) {
+      System.err.printf("Was unable to load library exception.\n%s%n", e.getMessage());
+    }
+
     // TODO: Wire Recipe Editor
     // TODO: Wire Import Interface
 
