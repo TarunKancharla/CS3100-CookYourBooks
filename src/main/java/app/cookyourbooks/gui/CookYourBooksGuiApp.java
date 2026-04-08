@@ -16,8 +16,10 @@ import org.slf4j.LoggerFactory;
 import app.cookyourbooks.CybLibrary;
 import app.cookyourbooks.gui.view.LibraryViewController;
 import app.cookyourbooks.gui.view.MainViewController;
+import app.cookyourbooks.gui.view.RecipeEditorViewController;
 import app.cookyourbooks.gui.view.SearchViewController;
 import app.cookyourbooks.gui.viewmodel.LibraryViewModelImpl;
+import app.cookyourbooks.gui.viewmodel.RecipeEditorViewModelImpl;
 import app.cookyourbooks.gui.viewmodel.SearchViewModelImpl;
 import app.cookyourbooks.services.LibrarianServiceImpl;
 
@@ -97,7 +99,17 @@ public class CookYourBooksGuiApp extends Application {
       System.err.printf("Was unable to load library exception.\n%s%n", e.getMessage());
     }
 
-    // TODO: Wire Recipe Editor
+    var recipeEditorVm =
+        new RecipeEditorViewModelImpl(library.getRecipeRepository(), navigationService);
+    try {
+      FXMLLoader editorLoader =
+          new FXMLLoader(getClass().getResource("/fxml/RecipeEditorView.fxml"));
+      editorLoader.setControllerFactory(clazz -> new RecipeEditorViewController(recipeEditorVm));
+      Parent recipeEditorView = editorLoader.load();
+      mainController.setViewNode(NavigationService.View.RECIPE_EDITOR, recipeEditorView);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to load RecipeEditorView.fxml", e);
+    }
     // TODO: Wire Import Interface
 
     // ── Wire Search & Filter ──
