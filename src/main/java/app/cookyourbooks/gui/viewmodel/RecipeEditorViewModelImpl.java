@@ -11,9 +11,11 @@ import javafx.collections.ObservableList;
 
 import org.jspecify.annotations.Nullable;
 
+import app.cookyourbooks.gui.BackgroundTaskRunner;
 import app.cookyourbooks.gui.NavigationService;
 import app.cookyourbooks.model.Ingredient;
 import app.cookyourbooks.model.Recipe;
+import app.cookyourbooks.model.VagueIngredient;
 import app.cookyourbooks.repository.RecipeRepository;
 
 public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
@@ -110,7 +112,61 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
   }
 
   @Override
-  public void save() {}
+  @SuppressWarnings("FutureReturnValueIgnored")
+  public void save() {
+    if (recipeId == null || !editing.get() || !isDirty.get() || !isValid.get() || isSaving.get()) {
+      return;
+    }
+
+    Recipe original =
+        recipeRepository
+            .findById(recipeId)
+            .orElseThrow(() -> new IllegalArgumentException("Recipe not found: " + recipeId));
+
+    List<Ingredient> updatedIngredients =
+        ingredients.stream()
+            .map(
+                entry ->
+                    (Ingredient)
+                        new VagueIngredient(
+                            entry.name().trim(),
+                            entry.description().isBlank() ? null : entry.description().trim(),
+                            null,
+                            null))
+            .toList();
+
+    Recipe updated =
+        new Recipe(
+            original.getId(),
+            title.get().trim(),
+            original.getServings(),
+            updatedIngredients,
+            original.getInstructions(),
+            original.getConversionRules());
+
+    isSaving.set(true);
+    statusMessage.set("Saving...");
+
+    BackgroundTaskRunner.run(
+        () -> {
+          recipeRepository.save(updated);
+          return updated;
+        },
+        saved -> {
+          loadedTitle = saved.getTitle().trim();
+          loadedIngredients = List.copyOf(ingredients);
+          isDirty.set(false);
+          isSaving.set(false);
+          editing.set(false);
+          statusMessage.set("Saved successfully.");
+        },
+        error -> {
+          isSaving.set(false);
+          editing.set(true);
+          isDirty.set(true);
+          statusMessage.set("Save failed: " + error.getMessage());
+        });
+  }
 
   @Override
   public void discardChanges() {

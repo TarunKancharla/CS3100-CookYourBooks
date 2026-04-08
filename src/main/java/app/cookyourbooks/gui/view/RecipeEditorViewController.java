@@ -17,6 +17,7 @@ public class RecipeEditorViewController {
   @FXML private ListView<IngredientEntry> ingredientsList;
   @FXML private Button editButton;
   @FXML private Button discardButton;
+  @FXML private Button saveButton;
   @FXML private Button addIngredientButton;
   @FXML private Button removeIngredientButton;
   @FXML private Button moveUpButton;
@@ -38,15 +39,30 @@ public class RecipeEditorViewController {
     editButton
         .textProperty()
         .bind(Bindings.when(viewModel.editingProperty()).then("View").otherwise("Edit"));
+    saveButton
+        .textProperty()
+        .bind(Bindings.when(viewModel.isSavingProperty()).then("Saving...").otherwise("Save"));
 
-    addIngredientButton.disableProperty().bind(viewModel.editingProperty().not());
+    addIngredientButton
+        .disableProperty()
+        .bind(viewModel.editingProperty().not().or(viewModel.isSavingProperty()));
+    saveButton
+        .disableProperty()
+        .bind(
+            viewModel
+                .isSavingProperty()
+                .or(viewModel.editingProperty().not())
+                .or(viewModel.isDirtyProperty().not())
+                .or(viewModel.isValidProperty().not()));
     discardButton.disableProperty().bind(viewModel.isDirtyProperty().not());
+    editButton.disableProperty().bind(viewModel.isSavingProperty());
     removeIngredientButton
         .disableProperty()
         .bind(
             viewModel
                 .editingProperty()
                 .not()
+                .or(viewModel.isSavingProperty())
                 .or(ingredientsList.getSelectionModel().selectedIndexProperty().lessThan(0)));
     moveUpButton
         .disableProperty()
@@ -54,6 +70,7 @@ public class RecipeEditorViewController {
             viewModel
                 .editingProperty()
                 .not()
+                .or(viewModel.isSavingProperty())
                 .or(
                     ingredientsList
                         .getSelectionModel()
@@ -65,6 +82,7 @@ public class RecipeEditorViewController {
             viewModel
                 .editingProperty()
                 .not()
+                .or(viewModel.isSavingProperty())
                 .or(
                     ingredientsList
                         .getSelectionModel()
@@ -74,6 +92,7 @@ public class RecipeEditorViewController {
 
     editButton.setOnAction(e -> viewModel.toggleEditMode());
     discardButton.setOnAction(e -> viewModel.discardChanges());
+    saveButton.setOnAction(e -> viewModel.save());
     addIngredientButton.setOnAction(
         e -> {
           viewModel.addIngredient();
