@@ -8,17 +8,18 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import app.cookyourbooks.CybLibrary;
-import app.cookyourbooks.gui.view.ImportViewController;
+import app.cookyourbooks.gui.view.LibraryViewController;
 import app.cookyourbooks.gui.view.MainViewController;
-import app.cookyourbooks.gui.viewmodel.ImportViewModelImpl;
+import app.cookyourbooks.gui.view.SearchViewController;
+import app.cookyourbooks.gui.viewmodel.SearchViewModelImpl;
+import app.cookyourbooks.gui.viewmodel.LibraryViewModelImpl;
 import app.cookyourbooks.services.LibrarianServiceImpl;
-import app.cookyourbooks.services.ocr.OcrException;
-import app.cookyourbooks.services.ocr.RecipeOcrService;
 
 /**
  * JavaFX entry point for CookYourBooks.
@@ -84,30 +85,35 @@ public class CookYourBooksGuiApp extends Application {
     //   mainController.setViewNode(NavigationService.View.LIBRARY, libraryView);
 
     // TODO: Wire Library View (use librarianService)
+    var libraryVm = new LibraryViewModelImpl(librarianService, navigationService, new Duration(5));
+    FXMLLoader libraryLoader = new FXMLLoader(getClass().getResource("/fxml/LibraryView.fxml"));
+    libraryLoader.setControllerFactory(c -> new LibraryViewController(libraryVm));
+    try {
+      Parent libraryView = libraryLoader.load();
+      mainController.setViewNode(NavigationService.View.LIBRARY, libraryView);
+    } catch (IOException e) {
+      System.err.printf("Was unable to load library exception.\n%s%n", e.getMessage());
+    }
+
     // TODO: Wire Recipe Editor
     // TODO: Wire Import Interface
-    // TODO: Wire Search & Filter (teams of 4 only)
 
-    // Wire Import Interface
-    RecipeOcrService ocrService =
-        imagePath -> {
-          throw new OcrException(
-              "OCR not configured");
-        };
-    var importVm = new ImportViewModelImpl(ocrService, librarianService);
+    // ── Wire Search & Filter ──
+    var searchVm =
+        new SearchViewModelImpl(librarianService, navigationService, Duration.ofMillis(300));
     try {
-      FXMLLoader importLoader = new FXMLLoader(getClass().getResource("/fxml/ImportView.fxml"));
-      importLoader.setControllerFactory(clazz -> new ImportViewController(importVm));
-      Parent importView = importLoader.load();
-      mainController.setViewNode(NavigationService.View.IMPORT, importView);
+      FXMLLoader searchLoader = new FXMLLoader(getClass().getResource("/fxml/SearchView.fxml"));
+      searchLoader.setControllerFactory(clazz -> new SearchViewController(searchVm));
+      Parent searchView = searchLoader.load();
+      mainController.setViewNode(NavigationService.View.SEARCH, searchView);
     } catch (IOException e) {
-      throw new RuntimeException("Failed to load ImportView.fxml", e);
+      throw new RuntimeException("Failed to load SearchView.fxml", e);
     }
 
     // ── 6. Load the main layout and show the window ──
     try {
       FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("/fxml/MainView.fxml"));
-      mainLoader.setControllerFactory(clazz -> mainController);
+      mainLoader.setController(mainController);
       Parent root = mainLoader.load();
 
       Scene scene = new Scene(root, 960, 640);
