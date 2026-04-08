@@ -97,6 +97,7 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
   @Override
   public void toggleEditMode() {
     editing.set(!editing.get());
+    statusMessage.set(editing.get() ? "Edit mode enabled." : "View mode.");
   }
 
   @Override
@@ -106,10 +107,49 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
   public void discardChanges() {}
 
   @Override
-  public void addIngredient() {}
+  public void addIngredient() {
+    if (!editing.get()) {
+      return;
+    }
+    ingredients.add(new IngredientEntry("New ingredient", ""));
+    statusMessage.set("Ingredient added.");
+  }
 
   @Override
-  public void removeIngredient(int index) {}
+  public void removeIngredient(int index) {
+    if (!editing.get()) {
+      return;
+    }
+    if (index < 0 || index >= ingredients.size()) {
+      return;
+    }
+    ingredients.remove(index);
+    statusMessage.set("Ingredient removed.");
+  }
+
+  public void moveIngredientUp(int index) {
+    if (!editing.get()) {
+      return;
+    }
+    if (index <= 0 || index >= ingredients.size()) {
+      return;
+    }
+    IngredientEntry entry = ingredients.remove(index);
+    ingredients.add(index - 1, entry);
+    statusMessage.set("Ingredient moved.");
+  }
+
+  public void moveIngredientDown(int index) {
+    if (!editing.get()) {
+      return;
+    }
+    if (index < 0 || index >= ingredients.size() - 1) {
+      return;
+    }
+    IngredientEntry entry = ingredients.remove(index);
+    ingredients.add(index + 1, entry);
+    statusMessage.set("Ingredient moved.");
+  }
 
   @Override
   public @Nullable String getRecipeId() {
