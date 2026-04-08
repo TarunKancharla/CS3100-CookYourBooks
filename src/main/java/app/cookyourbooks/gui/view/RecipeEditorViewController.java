@@ -17,6 +17,7 @@ import org.jspecify.annotations.Nullable;
 import app.cookyourbooks.gui.viewmodel.RecipeEditorViewModelImpl;
 import app.cookyourbooks.gui.viewmodel.RecipeEditorViewModelImpl.IngredientEntry;
 
+/** JavaFX controller for the Recipe Editor view. */
 @SuppressWarnings("NullAway.Init")
 public class RecipeEditorViewController {
   @FXML private TextField titleField;
@@ -33,10 +34,16 @@ public class RecipeEditorViewController {
   @FXML private Label statusLabel;
   private final RecipeEditorViewModelImpl viewModel;
 
+  /**
+   * Creates the controller with its view model dependency.
+   *
+   * @param viewModel recipe editor view model
+   */
   public RecipeEditorViewController(RecipeEditorViewModelImpl viewModel) {
     this.viewModel = viewModel;
   }
 
+  /** Initializes control bindings and event handlers after FXML injection. */
   @SuppressWarnings("UnusedMethod")
   @FXML
   private void initialize() {
@@ -174,12 +181,18 @@ public class RecipeEditorViewController {
         });
   }
 
+  /** Custom list cell that shows editable ingredient fields. */
   private static final class IngredientCell extends ListCell<IngredientEntry> {
     private final TextField nameField = new TextField();
     private final TextField descriptionField = new TextField();
     private final HBox container = new HBox(8, nameField, descriptionField);
     private @Nullable IngredientEntry boundItem;
 
+    /**
+     * Creates an editable ingredient cell.
+     *
+     * @param viewModel recipe editor view model
+     */
     private IngredientCell(RecipeEditorViewModelImpl viewModel) {
       HBox.setHgrow(nameField, Priority.ALWAYS);
       HBox.setHgrow(descriptionField, Priority.ALWAYS);
@@ -193,6 +206,12 @@ public class RecipeEditorViewController {
           .bind(viewModel.editingProperty().not().or(viewModel.isSavingProperty()));
     }
 
+    /**
+     * Updates text fields to the current row item.
+     *
+     * @param item ingredient row item
+     * @param empty whether the cell is empty
+     */
     @Override
     protected void updateItem(IngredientEntry item, boolean empty) {
       super.updateItem(item, empty);

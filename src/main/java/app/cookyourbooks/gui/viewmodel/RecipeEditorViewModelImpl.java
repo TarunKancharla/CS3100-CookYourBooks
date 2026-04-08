@@ -20,32 +20,45 @@ import app.cookyourbooks.model.Recipe;
 import app.cookyourbooks.model.VagueIngredient;
 import app.cookyourbooks.repository.RecipeRepository;
 
+/** ViewModel implementation for the Recipe Editor. */
 public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
+  /** Ingredient row used by the editor view. */
   public static final class IngredientEntry {
     private final StringProperty name;
     private final StringProperty description;
 
+    /**
+     * Creates an ingredient entry row.
+     *
+     * @param name ingredient name
+     * @param description ingredient description text
+     */
     public IngredientEntry(String name, String description) {
       this.name = new SimpleStringProperty(name);
       this.description = new SimpleStringProperty(description);
     }
 
+    /** Returns the observable ingredient name property. */
     public StringProperty nameProperty() {
       return name;
     }
 
+    /** Returns the observable ingredient description property. */
     public StringProperty descriptionProperty() {
       return description;
     }
 
+    /** Returns the current ingredient name. */
     public String name() {
       return name.get();
     }
 
+    /** Returns the current ingredient description. */
     public String description() {
       return description.get();
     }
 
+    /** Compares by name and description values. */
     @Override
     public boolean equals(@Nullable Object obj) {
       if (this == obj) {
@@ -58,6 +71,7 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
           && Objects.equals(description(), other.description());
     }
 
+    /** Returns hash code for the value comparison. */
     @Override
     public int hashCode() {
       return Objects.hash(name(), description());
@@ -81,6 +95,12 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
   private List<IngredientEntry> loadedIngredients = List.of();
   private boolean suppressDirtyTracking;
 
+  /**
+   * Creates the editor view model and links it to navigation events.
+   *
+   * @param recipeRepository repository used for recipe reads and saves
+   * @param navigation shared navigation service
+   */
   public RecipeEditorViewModelImpl(
       RecipeRepository recipeRepository, NavigationService navigation) {
     this.recipeRepository = recipeRepository;
@@ -113,49 +133,63 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
             });
   }
 
+  /** Returns the editable title property. */
   @Override
   public StringProperty titleProperty() {
     return title;
   }
 
+  /** Returns the editable description property. */
   public StringProperty descriptionProperty() {
     return description;
   }
 
+  /** Returns the editable instructions property. */
   public StringProperty instructionsProperty() {
     return instructions;
   }
 
+  /** Returns the editable ingredient list property. */
   @Override
   public ObservableList<IngredientEntry> ingredientsProperty() {
     return ingredients;
   }
 
+  /** Returns whether edit mode is enabled. */
   @Override
   public BooleanProperty editingProperty() {
     return editing;
   }
 
+  /** Returns whether unsaved changes are present. */
   @Override
   public BooleanProperty isDirtyProperty() {
     return isDirty;
   }
 
+  /** Returns whether current editor state is valid. */
   @Override
   public BooleanProperty isValidProperty() {
     return isValid;
   }
 
+  /** Returns whether a save operation is in progress. */
   @Override
   public BooleanProperty isSavingProperty() {
     return isSaving;
   }
 
+  /** Returns the status and error message property. */
   @Override
   public StringProperty statusMessageProperty() {
     return statusMessage;
   }
 
+  /**
+   * Loads a recipe into editor state.
+   *
+   * @param recipeId recipe identifier to load
+   */
   @Override
   public void loadRecipe(String recipeId) {
     Recipe recipe =
@@ -177,12 +211,14 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
     statusMessage.set("Loaded recipe.");
   }
 
+  /** Toggles between view and edit mode. */
   @Override
   public void toggleEditMode() {
     editing.set(!editing.get());
     statusMessage.set(editing.get() ? "Edit mode enabled." : "View mode.");
   }
 
+  /** Saves current edits asynchronously to the repository. */
   @Override
   @SuppressWarnings("FutureReturnValueIgnored")
   public void save() {
@@ -242,6 +278,7 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
         });
   }
 
+  /** Restores editor fields to the last loaded or saved state. */
   @Override
   public void discardChanges() {
     if (recipeId == null) {
@@ -257,6 +294,7 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
     statusMessage.set("Changes discarded.");
   }
 
+  /** Adds a new ingredient row while in edit mode. */
   @Override
   public void addIngredient() {
     if (!editing.get()) {
@@ -267,6 +305,11 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
     statusMessage.set("Ingredient added.");
   }
 
+  /**
+   * Removes an ingredient row while in edit mode.
+   *
+   * @param index ingredient index to remove
+   */
   @Override
   public void removeIngredient(int index) {
     if (!editing.get()) {
@@ -280,6 +323,11 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
     statusMessage.set("Ingredient removed.");
   }
 
+  /**
+   * Moves an ingredient one position up.
+   *
+   * @param index current ingredient index
+   */
   public void moveIngredientUp(int index) {
     if (!editing.get()) {
       return;
@@ -293,6 +341,11 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
     statusMessage.set("Ingredient moved.");
   }
 
+  /**
+   * Moves an ingredient one position down.
+   *
+   * @param index current ingredient index
+   */
   public void moveIngredientDown(int index) {
     if (!editing.get()) {
       return;
@@ -306,66 +359,97 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
     statusMessage.set("Ingredient moved.");
   }
 
+  /** Returns currently loaded recipe ID, or null if none. */
   @Override
   public @Nullable String getRecipeId() {
     return recipeId;
   }
 
+  /** Returns current title text. */
   @Override
   public String getTitle() {
     return title.get();
   }
 
+  /** Returns current ingredient count. */
   @Override
   public int getIngredientCount() {
     return ingredients.size();
   }
 
+  /** Returns ingredient names in display order. */
   @Override
   public List<String> getIngredientNames() {
     return ingredients.stream().map(IngredientEntry::name).toList();
   }
 
+  /** Returns true if editor is in edit mode. */
   @Override
   public boolean isEditing() {
     return editing.get();
   }
 
+  /** Returns true if there are unsaved edits. */
   @Override
   public boolean isDirty() {
     return isDirty.get();
   }
 
+  /** Returns true if current editor state is valid. */
   @Override
   public boolean isValid() {
     return isValid.get();
   }
 
+  /** Returns true while save is in progress. */
   @Override
   public boolean isSaving() {
     return isSaving.get();
   }
 
+  /** Returns current status or error message text. */
   @Override
   public String getStatusMessage() {
     return statusMessage.get();
   }
 
+  /**
+   * Converts a domain ingredient into an editable ingredient row.
+   *
+   * @param ingredient domain ingredient
+   * @return editable ingredient row
+   */
   private IngredientEntry toIngredientEntry(Ingredient ingredient) {
     return new IngredientEntry(ingredient.getName(), ingredient.toString());
   }
 
+  /**
+   * Binds to ingredient row property changes for dirty tracking.
+   *
+   * @param entry ingredient row to bind to
+   */
   private void bindIngredientEntry(IngredientEntry entry) {
-    entry.nameProperty().addListener((obs, oldValue, newValue) -> updateDirtyState());
-    entry.descriptionProperty().addListener((obs, oldValue, newValue) -> updateDirtyState());
+    entry.nameProperty().bindBidirectional(entry.nameProperty());
+    entry.descriptionProperty().bindBidirectional(entry.descriptionProperty());
   }
 
+  /**
+   * Creates a copy of ingredient rows for baseline snapshots.
+   *
+   * @param source ingredient rows to copy
+   * @return copied ingredient rows
+   */
   private List<IngredientEntry> snapshotIngredients(List<IngredientEntry> source) {
     return source.stream()
         .map(entry -> new IngredientEntry(entry.name(), entry.description()))
         .toList();
   }
 
+  /**
+   * Splits loaded instruction steps into description and instructions fields.
+   *
+   * @param recipe source recipe
+   */
   private void loadInstructionText(Recipe recipe) {
     List<Instruction> all = recipe.getInstructions();
     if (all.isEmpty()) {
@@ -384,6 +468,11 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
             .collect(java.util.stream.Collectors.joining("\n")));
   }
 
+  /**
+   * Builds domain instruction steps from editor description and instructions fields.
+   *
+   * @return instruction list in step order
+   */
   private List<Instruction> buildUpdatedInstructions() {
     List<String> lines = new java.util.ArrayList<>();
     String desc = description.get().trim();
@@ -407,6 +496,7 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
         .toList();
   }
 
+  /** Updates dirty state by comparing editor fields to the loaded snapshot. */
   private void updateDirtyState() {
     if (suppressDirtyTracking || recipeId == null) {
       return;
