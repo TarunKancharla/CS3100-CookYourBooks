@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Search & Filter view for CookYourBooks.
+
+  Layout:
+    TOP    — search bar + loading spinner
+    LEFT   — ingredient filter panel (add/remove filters)
+    CENTER — results list
+    BOTTOM — status message
+-->
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="app.cookyourbooks.gui.view.SearchViewController"
+            styleClass="content-pane">
+
+    <!-- TOP: search bar row -->
+    <top>
+        <HBox spacing="8" styleClass="search-bar-row">
+            <padding>
+                <Insets bottom="8"/>
+            </padding>
+            <TextField fx:id="searchField"
+                       promptText="Search recipes..."
+                       HBox.hgrow="ALWAYS"/>
+            <ProgressIndicator fx:id="loadingSpinner" prefWidth="24" prefHeight="24"/>
+        </HBox>
+    </top>
+
+    <!-- LEFT: ingredient filter panel -->
+    <left>
+        <VBox spacing="8" prefWidth="180" styleClass="filter-panel">
+            <padding>
+                <Insets right="12"/>
+            </padding>
+            <Label text="Filter by ingredient" styleClass="filter-heading"/>
+            <HBox spacing="4">
+                <TextField fx:id="ingredientField"
+                           promptText="e.g. carrot"
+                           HBox.hgrow="ALWAYS"/>
+                <Button fx:id="addFilterButton" text="Add"/>
+            </HBox>
+            <Label text="Active filters:"/>
+            <ListView fx:id="filterList" prefHeight="200"/>
+            <Button fx:id="removeFilterButton" text="Remove selected" maxWidth="Infinity"/>
+            <Button fx:id="clearFiltersButton" text="Clear all filters" maxWidth="Infinity"/>
+        </VBox>
+    </left>
+
+    <!-- CENTER: results list -->
+    <center>
+        <VBox spacing="4">
+            <Label text="Results" styleClass="section-heading"/>
+            <ListView fx:id="resultsList" VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </center>
+
+    <!-- BOTTOM: status message -->
+    <bottom>
+        <Label fx:id="statusLabel" styleClass="status-label">
+            <padding>
+                <Insets top="8"/>
+            </padding>
+        </Label>
+    </bottom>
+
+</BorderPane>

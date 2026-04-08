@@ -2,6 +2,7 @@ package app.cookyourbooks.gui;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -13,9 +14,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import app.cookyourbooks.CybLibrary;
-import app.cookyourbooks.gui.view.ImportViewController;
+import app.cookyourbooks.gui.view.LibraryViewController;
 import app.cookyourbooks.gui.view.MainViewController;
-import app.cookyourbooks.gui.viewmodel.ImportViewModelImpl;
+import app.cookyourbooks.gui.view.RecipeEditorViewController;
+import app.cookyourbooks.gui.view.SearchViewController;
+import app.cookyourbooks.gui.viewmodel.LibraryViewModelImpl;
+import app.cookyourbooks.gui.viewmodel.RecipeEditorViewModelImpl;
+import app.cookyourbooks.gui.viewmodel.SearchViewModelImpl;
 import app.cookyourbooks.services.LibrarianServiceImpl;
 import app.cookyourbooks.services.ocr.OcrException;
 import app.cookyourbooks.services.ocr.RecipeOcrService;
@@ -84,9 +89,42 @@ public class CookYourBooksGuiApp extends Application {
     //   mainController.setViewNode(NavigationService.View.LIBRARY, libraryView);
 
     // TODO: Wire Library View (use librarianService)
-    // TODO: Wire Recipe Editor
+    var libraryVm =
+        new LibraryViewModelImpl(
+            librarianService, navigationService, javafx.util.Duration.seconds(5));
+    FXMLLoader libraryLoader = new FXMLLoader(getClass().getResource("/fxml/LibraryView.fxml"));
+    libraryLoader.setControllerFactory(c -> new LibraryViewController(libraryVm));
+    try {
+      Parent libraryView = libraryLoader.load();
+      mainController.setViewNode(NavigationService.View.LIBRARY, libraryView);
+    } catch (IOException e) {
+      System.err.printf("Was unable to load library exception.\n%s%n", e.getMessage());
+    }
+
+    var recipeEditorVm =
+        new RecipeEditorViewModelImpl(library.getRecipeRepository(), navigationService);
+    try {
+      FXMLLoader editorLoader =
+          new FXMLLoader(getClass().getResource("/fxml/RecipeEditorView.fxml"));
+      editorLoader.setControllerFactory(clazz -> new RecipeEditorViewController(recipeEditorVm));
+      Parent recipeEditorView = editorLoader.load();
+      mainController.setViewNode(NavigationService.View.RECIPE_EDITOR, recipeEditorView);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to load RecipeEditorView.fxml", e);
+    }
     // TODO: Wire Import Interface
-    // TODO: Wire Search & Filter (teams of 4 only)
+
+    // ── Wire Search & Filter ──
+    var searchVm =
+        new SearchViewModelImpl(librarianService, navigationService, Duration.ofMillis(300));
+    try {
+      FXMLLoader searchLoader = new FXMLLoader(getClass().getResource("/fxml/SearchView.fxml"));
+      searchLoader.setControllerFactory(clazz -> new SearchViewController(searchVm));
+      Parent searchView = searchLoader.load();
+      mainController.setViewNode(NavigationService.View.SEARCH, searchView);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to load SearchView.fxml", e);
+    }
 
     // Wire Import Interface
     RecipeOcrService ocrService =
@@ -107,7 +145,7 @@ public class CookYourBooksGuiApp extends Application {
     // ── 6. Load the main layout and show the window ──
     try {
       FXMLLoader mainLoader = new FXMLLoader(getClass().getResource("/fxml/MainView.fxml"));
-      mainLoader.setControllerFactory(clazz -> mainController);
+      mainLoader.setController(mainController);
       Parent root = mainLoader.load();
 
       Scene scene = new Scene(root, 960, 640);
