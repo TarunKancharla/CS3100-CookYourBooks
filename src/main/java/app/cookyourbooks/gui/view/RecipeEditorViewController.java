@@ -16,6 +16,7 @@ public class RecipeEditorViewController {
   @FXML private TextField titleField;
   @FXML private ListView<IngredientEntry> ingredientsList;
   @FXML private Button editButton;
+  @FXML private Button discardButton;
   @FXML private Button addIngredientButton;
   @FXML private Button removeIngredientButton;
   @FXML private Button moveUpButton;
@@ -39,6 +40,7 @@ public class RecipeEditorViewController {
         .bind(Bindings.when(viewModel.editingProperty()).then("View").otherwise("Edit"));
 
     addIngredientButton.disableProperty().bind(viewModel.editingProperty().not());
+    discardButton.disableProperty().bind(viewModel.isDirtyProperty().not());
     removeIngredientButton
         .disableProperty()
         .bind(
@@ -71,6 +73,7 @@ public class RecipeEditorViewController {
                             Bindings.size(ingredientsList.getItems()).subtract(1))));
 
     editButton.setOnAction(e -> viewModel.toggleEditMode());
+    discardButton.setOnAction(e -> viewModel.discardChanges());
     addIngredientButton.setOnAction(
         e -> {
           viewModel.addIngredient();

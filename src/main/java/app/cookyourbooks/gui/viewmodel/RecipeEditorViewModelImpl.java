@@ -28,11 +28,18 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
   private final BooleanProperty isSaving = new SimpleBooleanProperty(false);
   private final StringProperty statusMessage = new SimpleStringProperty("No recipe selected.");
   private @Nullable String recipeId;
+  private String loadedTitle = "";
+  private List<IngredientEntry> loadedIngredients = List.of();
+  private boolean suppressDirtyTracking;
 
   public RecipeEditorViewModelImpl(
       RecipeRepository recipeRepository, NavigationService navigation) {
     this.recipeRepository = recipeRepository;
-    title.addListener((obs, oldValue, newValue) -> isValid.set(!newValue.trim().isEmpty()));
+    title.addListener(
+        (obs, oldValue, newValue) -> {
+          isValid.set(!newValue.trim().isEmpty());
+          updateDirtyState();
+        });
     navigation
         .selectedRecipeIdProperty()
         .addListener(
@@ -88,9 +95,11 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
     title.set(recipe.getTitle());
     ingredients.setAll(recipe.getIngredients().stream().map(this::toIngredientEntry).toList());
     editing.set(false);
-    isDirty.set(false);
     isSaving.set(false);
     isValid.set(!title.get().trim().isEmpty());
+    loadedTitle = title.get().trim();
+    loadedIngredients = List.copyOf(ingredients);
+    isDirty.set(false);
     statusMessage.set("Loaded recipe.");
   }
 
@@ -104,7 +113,17 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
   public void save() {}
 
   @Override
-  public void discardChanges() {}
+  public void discardChanges() {
+    if (recipeId == null) {
+      return;
+    }
+    suppressDirtyTracking = true;
+    title.set(loadedTitle);
+    ingredients.setAll(loadedIngredients);
+    suppressDirtyTracking = false;
+    isDirty.set(false);
+    statusMessage.set("Changes discarded.");
+  }
 
   @Override
   public void addIngredient() {
@@ -112,6 +131,7 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
       return;
     }
     ingredients.add(new IngredientEntry("New ingredient", ""));
+    updateDirtyState();
     statusMessage.set("Ingredient added.");
   }
 
@@ -124,6 +144,7 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
       return;
     }
     ingredients.remove(index);
+    updateDirtyState();
     statusMessage.set("Ingredient removed.");
   }
 
@@ -136,6 +157,7 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
     }
     IngredientEntry entry = ingredients.remove(index);
     ingredients.add(index - 1, entry);
+    updateDirtyState();
     statusMessage.set("Ingredient moved.");
   }
 
@@ -148,6 +170,7 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
     }
     IngredientEntry entry = ingredients.remove(index);
     ingredients.add(index + 1, entry);
+    updateDirtyState();
     statusMessage.set("Ingredient moved.");
   }
 
@@ -198,5 +221,14 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
 
   private IngredientEntry toIngredientEntry(Ingredient ingredient) {
     return new IngredientEntry(ingredient.getName(), ingredient.toString());
+  }
+
+  private void updateDirtyState() {
+    if (suppressDirtyTracking || recipeId == null) {
+      return;
+    }
+    boolean titleChanged = !title.get().trim().equals(loadedTitle);
+    boolean ingredientsChanged = !List.copyOf(ingredients).equals(loadedIngredients);
+    isDirty.set(titleChanged || ingredientsChanged);
   }
 }

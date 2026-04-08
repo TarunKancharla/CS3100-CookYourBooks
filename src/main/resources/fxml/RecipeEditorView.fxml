@@ -21,6 +21,7 @@
             <TextField fx:id="titleField" promptText="Recipe title"/>
             <HBox spacing="8">
                 <Button fx:id="editButton" text="Edit"/>
+                <Button fx:id="discardButton" text="Discard"/>
                 <Button fx:id="addIngredientButton" text="Add"/>
                 <Button fx:id="removeIngredientButton" text="Remove"/>
                 <Button fx:id="moveUpButton" text="Move Up"/>
