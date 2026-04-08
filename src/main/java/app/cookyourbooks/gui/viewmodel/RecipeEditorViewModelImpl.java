@@ -3,6 +3,7 @@ package app.cookyourbooks.gui.viewmodel;
 import java.util.List;
 import java.util.Objects;
 
+import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -82,7 +83,9 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
   private final StringProperty title = new SimpleStringProperty("");
   private final StringProperty description = new SimpleStringProperty("");
   private final StringProperty instructions = new SimpleStringProperty("");
-  private final ObservableList<IngredientEntry> ingredients = FXCollections.observableArrayList();
+  private final ObservableList<IngredientEntry> ingredients =
+      FXCollections.observableArrayList(
+          entry -> new Observable[] {entry.nameProperty(), entry.descriptionProperty()});
   private final BooleanProperty editing = new SimpleBooleanProperty(false);
   private final BooleanProperty isDirty = new SimpleBooleanProperty(false);
   private final BooleanProperty isValid = new SimpleBooleanProperty(false);
@@ -114,13 +117,7 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
     ingredients.addListener(
         (javafx.collections.ListChangeListener<? super IngredientEntry>)
             change -> {
-              while (change.next()) {
-                if (change.wasAdded()) {
-                  for (IngredientEntry entry : change.getAddedSubList()) {
-                    bindIngredientEntry(entry);
-                  }
-                }
-              }
+              while (change.next()) {}
               updateDirtyState();
             });
     navigation
@@ -421,16 +418,6 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
    */
   private IngredientEntry toIngredientEntry(Ingredient ingredient) {
     return new IngredientEntry(ingredient.getName(), ingredient.toString());
-  }
-
-  /**
-   * Binds to ingredient row property changes for dirty tracking.
-   *
-   * @param entry ingredient row to bind to
-   */
-  private void bindIngredientEntry(IngredientEntry entry) {
-    entry.nameProperty().bindBidirectional(entry.nameProperty());
-    entry.descriptionProperty().bindBidirectional(entry.descriptionProperty());
   }
 
   /**
