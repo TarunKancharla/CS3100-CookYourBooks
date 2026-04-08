@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import app.cookyourbooks.CybLibrary;
 import app.cookyourbooks.gui.view.LibraryViewController;
 import app.cookyourbooks.gui.view.MainViewController;
+import app.cookyourbooks.gui.view.SearchViewController;
+import app.cookyourbooks.gui.viewmodel.SearchViewModelImpl;
 import app.cookyourbooks.gui.viewmodel.LibraryViewModelImpl;
 import app.cookyourbooks.services.LibrarianServiceImpl;
 
@@ -95,7 +97,18 @@ public class CookYourBooksGuiApp extends Application {
 
     // TODO: Wire Recipe Editor
     // TODO: Wire Import Interface
-    // TODO: Wire Search & Filter (teams of 4 only)
+
+    // ── Wire Search & Filter ──
+    var searchVm =
+        new SearchViewModelImpl(librarianService, navigationService, Duration.ofMillis(300));
+    try {
+      FXMLLoader searchLoader = new FXMLLoader(getClass().getResource("/fxml/SearchView.fxml"));
+      searchLoader.setControllerFactory(clazz -> new SearchViewController(searchVm));
+      Parent searchView = searchLoader.load();
+      mainController.setViewNode(NavigationService.View.SEARCH, searchView);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to load SearchView.fxml", e);
+    }
 
     // ── 6. Load the main layout and show the window ──
     try {
