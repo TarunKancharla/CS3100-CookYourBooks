@@ -58,7 +58,6 @@ class RecipeEditorViewModelImplTest extends ViewModelTestBase {
   }
 
   /** changing title or ingredients in edit mode sets dirty true. */
-  @SuppressWarnings("unchecked")
   @Test
   void e3_changesInEditMode_setDirtyTrue() {
     vm.loadRecipe(recipe.getId());
@@ -76,7 +75,6 @@ class RecipeEditorViewModelImplTest extends ViewModelTestBase {
   }
 
   /** discardChanges restores original data and clears dirty. */
-  @SuppressWarnings("unchecked")
   @Test
   void e4_discardChanges_restoresAndClearsDirty() {
     vm.loadRecipe(recipe.getId());
