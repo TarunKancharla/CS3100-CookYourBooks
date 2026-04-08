@@ -14,6 +14,7 @@ import org.jspecify.annotations.Nullable;
 import app.cookyourbooks.gui.BackgroundTaskRunner;
 import app.cookyourbooks.gui.NavigationService;
 import app.cookyourbooks.model.Ingredient;
+import app.cookyourbooks.model.Instruction;
 import app.cookyourbooks.model.Recipe;
 import app.cookyourbooks.model.VagueIngredient;
 import app.cookyourbooks.repository.RecipeRepository;
@@ -23,6 +24,8 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
 
   private final RecipeRepository recipeRepository;
   private final StringProperty title = new SimpleStringProperty("");
+  private final StringProperty description = new SimpleStringProperty("");
+  private final StringProperty instructions = new SimpleStringProperty("");
   private final ObservableList<IngredientEntry> ingredients = FXCollections.observableArrayList();
   private final BooleanProperty editing = new SimpleBooleanProperty(false);
   private final BooleanProperty isDirty = new SimpleBooleanProperty(false);
@@ -31,6 +34,8 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
   private final StringProperty statusMessage = new SimpleStringProperty("No recipe selected.");
   private @Nullable String recipeId;
   private String loadedTitle = "";
+  private String loadedDescription = "";
+  private String loadedInstructions = "";
   private List<IngredientEntry> loadedIngredients = List.of();
   private boolean suppressDirtyTracking;
 
@@ -42,6 +47,8 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
           isValid.set(!newValue.trim().isEmpty());
           updateDirtyState();
         });
+    description.addListener((obs, oldValue, newValue) -> updateDirtyState());
+    instructions.addListener((obs, oldValue, newValue) -> updateDirtyState());
     navigation
         .selectedRecipeIdProperty()
         .addListener(
@@ -55,6 +62,14 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
   @Override
   public StringProperty titleProperty() {
     return title;
+  }
+
+  public StringProperty descriptionProperty() {
+    return description;
+  }
+
+  public StringProperty instructionsProperty() {
+    return instructions;
   }
 
   @Override
@@ -95,11 +110,14 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
             .orElseThrow(() -> new IllegalArgumentException("Recipe not found: " + recipeId));
     this.recipeId = recipe.getId();
     title.set(recipe.getTitle());
+    loadInstructionText(recipe);
     ingredients.setAll(recipe.getIngredients().stream().map(this::toIngredientEntry).toList());
     editing.set(false);
     isSaving.set(false);
     isValid.set(!title.get().trim().isEmpty());
     loadedTitle = title.get().trim();
+    loadedDescription = description.get().trim();
+    loadedInstructions = instructions.get().trim();
     loadedIngredients = List.copyOf(ingredients);
     isDirty.set(false);
     statusMessage.set("Loaded recipe.");
@@ -141,7 +159,7 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
             title.get().trim(),
             original.getServings(),
             updatedIngredients,
-            original.getInstructions(),
+            buildUpdatedInstructions(),
             original.getConversionRules());
 
     isSaving.set(true);
@@ -154,6 +172,8 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
         },
         saved -> {
           loadedTitle = saved.getTitle().trim();
+          loadedDescription = description.get().trim();
+          loadedInstructions = instructions.get().trim();
           loadedIngredients = List.copyOf(ingredients);
           isDirty.set(false);
           isSaving.set(false);
@@ -175,6 +195,8 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
     }
     suppressDirtyTracking = true;
     title.set(loadedTitle);
+    description.set(loadedDescription);
+    instructions.set(loadedInstructions);
     ingredients.setAll(loadedIngredients);
     suppressDirtyTracking = false;
     isDirty.set(false);
@@ -279,12 +301,55 @@ public class RecipeEditorViewModelImpl implements RecipeEditorViewModel {
     return new IngredientEntry(ingredient.getName(), ingredient.toString());
   }
 
+  private void loadInstructionText(Recipe recipe) {
+    List<Instruction> all = recipe.getInstructions();
+    if (all.isEmpty()) {
+      description.set("");
+      instructions.set("");
+      return;
+    }
+    description.set(all.getFirst().getText());
+    if (all.size() == 1) {
+      instructions.set("");
+      return;
+    }
+    instructions.set(
+        all.subList(1, all.size()).stream()
+            .map(Instruction::getText)
+            .collect(java.util.stream.Collectors.joining("\n")));
+  }
+
+  private List<Instruction> buildUpdatedInstructions() {
+    List<String> lines = new java.util.ArrayList<>();
+    String desc = description.get().trim();
+    if (!desc.isEmpty()) {
+      lines.add(desc);
+    }
+    String steps = instructions.get().trim();
+    if (!steps.isEmpty()) {
+      for (String line : java.util.regex.Pattern.compile("\\R").splitAsStream(steps).toList()) {
+        String trimmed = line.trim();
+        if (!trimmed.isEmpty()) {
+          lines.add(trimmed);
+        }
+      }
+    }
+    if (lines.isEmpty()) {
+      return List.of();
+    }
+    return java.util.stream.IntStream.range(0, lines.size())
+        .mapToObj(i -> new Instruction(i + 1, lines.get(i), List.of()))
+        .toList();
+  }
+
   private void updateDirtyState() {
     if (suppressDirtyTracking || recipeId == null) {
       return;
     }
     boolean titleChanged = !title.get().trim().equals(loadedTitle);
+    boolean descriptionChanged = !description.get().trim().equals(loadedDescription);
+    boolean instructionsChanged = !instructions.get().trim().equals(loadedInstructions);
     boolean ingredientsChanged = !List.copyOf(ingredients).equals(loadedIngredients);
-    isDirty.set(titleChanged || ingredientsChanged);
+    isDirty.set(titleChanged || descriptionChanged || instructionsChanged || ingredientsChanged);
   }
 }

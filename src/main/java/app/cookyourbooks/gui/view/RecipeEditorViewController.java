@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 
@@ -14,6 +15,8 @@ import app.cookyourbooks.gui.viewmodel.RecipeEditorViewModelImpl.IngredientEntry
 @SuppressWarnings("NullAway.Init")
 public class RecipeEditorViewController {
   @FXML private TextField titleField;
+  @FXML private TextArea descriptionArea;
+  @FXML private TextArea instructionsArea;
   @FXML private ListView<IngredientEntry> ingredientsList;
   @FXML private Button editButton;
   @FXML private Button discardButton;
@@ -33,7 +36,15 @@ public class RecipeEditorViewController {
   @FXML
   private void initialize() {
     titleField.textProperty().bindBidirectional(viewModel.titleProperty());
+    descriptionArea.textProperty().bindBidirectional(viewModel.descriptionProperty());
+    instructionsArea.textProperty().bindBidirectional(viewModel.instructionsProperty());
     titleField.editableProperty().bind(viewModel.editingProperty());
+    descriptionArea
+        .editableProperty()
+        .bind(viewModel.editingProperty().and(viewModel.isSavingProperty().not()));
+    instructionsArea
+        .editableProperty()
+        .bind(viewModel.editingProperty().and(viewModel.isSavingProperty().not()));
     ingredientsList.setItems(viewModel.ingredientsProperty());
     statusLabel.textProperty().bind(viewModel.statusMessageProperty());
     editButton
