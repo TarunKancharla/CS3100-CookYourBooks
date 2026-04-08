@@ -2,7 +2,6 @@ package app.cookyourbooks.gui;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.Duration;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
