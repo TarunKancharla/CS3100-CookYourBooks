@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="app.cookyourbooks.gui.view.RecipeEditorViewController"
+            styleClass="content-pane">
+    <top>
+        <VBox spacing="8">
+            <padding>
+                <Insets bottom="8"/>
+            </padding>
+            <Label text="Recipe Editor" styleClass="section-title"/>
+            <TextField fx:id="titleField" promptText="Recipe title"/>
+        </VBox>
+    </top>
+    <center>
+        <VBox spacing="6">
+            <Label text="Ingredients" styleClass="section-heading"/>
+            <ListView fx:id="ingredientsList" VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </center>
+    <bottom>
+        <Label fx:id="statusLabel" styleClass="status-label">
+            <padding>
+                <Insets top="8"/>
+            </padding>
+        </Label>
+    </bottom>
+</BorderPane>
