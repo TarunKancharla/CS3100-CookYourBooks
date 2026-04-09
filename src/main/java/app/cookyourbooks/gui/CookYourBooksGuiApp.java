@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 
+import app.cookyourbooks.gui.viewmodel.ImportViewModelImpl;
+import app.cookyourbooks.gui.viewmodel.RecipeEditorViewModelImpl;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -19,10 +21,10 @@ import app.cookyourbooks.adapters.gemini.RealGeminiClient;
 import app.cookyourbooks.gui.view.ImportViewController;
 import app.cookyourbooks.gui.view.LibraryViewController;
 import app.cookyourbooks.gui.view.MainViewController;
+import app.cookyourbooks.gui.view.RecipeEditorViewController;
 import app.cookyourbooks.gui.view.SearchViewController;
-import app.cookyourbooks.gui.viewmodel.ImportViewModelImpl;
-import app.cookyourbooks.gui.viewmodel.LibraryViewModelImpl;
 import app.cookyourbooks.gui.viewmodel.SearchViewModelImpl;
+import app.cookyourbooks.gui.viewmodel.LibraryViewModelImpl;
 import app.cookyourbooks.services.LibrarianServiceImpl;
 
 /**
@@ -101,7 +103,17 @@ public class CookYourBooksGuiApp extends Application {
       System.err.printf("Was unable to load library exception.\n%s%n", e.getMessage());
     }
 
-    // TODO: Wire Recipe Editor
+    var recipeEditorVm =
+        new RecipeEditorViewModelImpl(library.getRecipeRepository(), navigationService);
+    try {
+      FXMLLoader editorLoader =
+          new FXMLLoader(getClass().getResource("/fxml/RecipeEditorView.fxml"));
+      editorLoader.setControllerFactory(clazz -> new RecipeEditorViewController(recipeEditorVm));
+      Parent recipeEditorView = editorLoader.load();
+      mainController.setViewNode(NavigationService.View.RECIPE_EDITOR, recipeEditorView);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to load RecipeEditorView.fxml", e);
+    }
     // TODO: Wire Import Interface
     var ocrService = new GeminiOcrAdapter(new RealGeminiClient(System.getenv("GOOGLE_API_KEY")));
     var importVm = new ImportViewModelImpl(ocrService, librarianService);

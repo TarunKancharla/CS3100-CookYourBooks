@@ -53,7 +53,7 @@ When you're ready to connect to the real Gemini API, you'll need to implement `R
 
 The app automatically loads `.env` at startup via `dotenv-java`. The `.env` file is in `.gitignore`, so your key won't be committed.
 
-**Alternative:** You can also export `GOOGLE_API_KEY` as a shell environment variable if you prefer.
+**Alternative:** You can also export `OOGLE_API_KEY` as a shell environment variable if you prefer.
 
 ### Implementing the OCR Service
 
