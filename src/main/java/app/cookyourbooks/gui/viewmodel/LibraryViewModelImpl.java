@@ -17,6 +17,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import app.cookyourbooks.gui.BackgroundTaskRunner;
+import app.cookyourbooks.gui.DialogHandler;
 import app.cookyourbooks.gui.NavigationService;
 import app.cookyourbooks.model.Recipe;
 import app.cookyourbooks.model.RecipeCollection;
@@ -75,10 +76,7 @@ public class LibraryViewModelImpl implements LibraryViewModel {
                     rc.getTitle()
                         .toUpperCase(Locale.ROOT)
                         .contains(filterTextProperty.get().toUpperCase(Locale.ROOT)))
-            .map(
-                rc ->
-                    new RecipeCollectionSummary(
-                        rc.getId(), rc.getTitle(), rc.getSourceType(), rc.getRecipes().size()))
+            .map(RecipeCollectionSummary::of)
             .toList());
   }
 
@@ -157,7 +155,8 @@ public class LibraryViewModelImpl implements LibraryViewModel {
           loadingProperty.set(false);
         },
         err -> {
-          // TODO: Handle Loading Error
+          DialogHandler.showError("Error", err);
+          loadingProperty.set(false);
         });
   }
 
@@ -173,7 +172,7 @@ public class LibraryViewModelImpl implements LibraryViewModel {
 
     // should never happen, but just in case
     if (recipeCollection.isEmpty()) {
-      // TODO: Handle error
+      DialogHandler.showError("Error", "Recipe collection is missing.");
       return;
     }
 
@@ -201,7 +200,7 @@ public class LibraryViewModelImpl implements LibraryViewModel {
 
     if (toDelete.isEmpty()) {
       // should never happen
-      // TODO: handle error
+      DialogHandler.showError("Error", "Deleting collection does not exist.");
       return;
     }
 
@@ -212,8 +211,8 @@ public class LibraryViewModelImpl implements LibraryViewModel {
     // after 5sec, see if it's still deletion-marked
     BackgroundTaskRunner.run(
         () -> {
-          Thread.sleep((long) undoWindow.toMillis() * 1000);
-          return undoWindow.toMillis() * 1000;
+          Thread.sleep((long) undoWindow.toMillis());
+          return undoWindow.toMillis();
         },
         (result) -> {
           if (recipeCollectionsPendingDelete.stream()
@@ -225,7 +224,7 @@ public class LibraryViewModelImpl implements LibraryViewModel {
           }
         },
         (err) -> {
-          // TODO: handle err
+          DialogHandler.showError("Error", err);
         });
   }
 
@@ -245,7 +244,7 @@ public class LibraryViewModelImpl implements LibraryViewModel {
 
     // should never happen, but just in case
     if (selectedRecipe.isEmpty()) {
-      // TODO: handle error
+      DialogHandler.showError("Error", "Could not find the selected recipe.");
       return;
     }
 
