@@ -14,32 +14,17 @@
                </padding>
             </Label>
             <TextField fx:id="filterTextField" layoutY="33.0" prefHeight="26.0" promptText="Search Collections..." AnchorPane.leftAnchor="4.0" AnchorPane.rightAnchor="4.0" />
-            <ScrollPane fx:id="collectionsPane" fitToWidth="true" visible="false" AnchorPane.bottomAnchor="32.0" AnchorPane.leftAnchor="4.0" AnchorPane.rightAnchor="4.0" AnchorPane.topAnchor="63.0">
-              <content>
-                <AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
-                     <children>
-                        <VBox fx:id="collectionsCardsContainer" AnchorPane.bottomAnchor="4.0" AnchorPane.leftAnchor="4.0" AnchorPane.rightAnchor="4.0" AnchorPane.topAnchor="4.0" />
-                     </children></AnchorPane>
-              </content>
-            </ScrollPane>
             <Button fx:id="newButton" layoutX="4.0" layoutY="373.0" minWidth="-Infinity" mnemonicParsing="false" prefWidth="64.0" text="New" AnchorPane.bottomAnchor="4.0" AnchorPane.leftAnchor="4.0" />
             <Button fx:id="deleteButton" layoutX="341.0" layoutY="371.0" minWidth="-Infinity" mnemonicParsing="false" prefWidth="64.0" text="Delete" AnchorPane.bottomAnchor="4.0" AnchorPane.rightAnchor="4.0" />
             <Button fx:id="undoDeleteButton" layoutX="277.0" layoutY="371.0" minWidth="-Infinity" mnemonicParsing="false" prefWidth="64.0" text="Undo" visible="false" AnchorPane.bottomAnchor="4.0" AnchorPane.rightAnchor="72.0" />
             <TextField fx:id="collectionNameEntry" layoutX="77.0" layoutY="370.0" prefHeight="26.0" prefWidth="187.0" promptText="Collection Name" visible="false" AnchorPane.bottomAnchor="4.0" AnchorPane.leftAnchor="4.0" AnchorPane.rightAnchor="208.0" />
             <Button fx:id="saveNewCollectionButton" layoutX="264.0" layoutY="370.0" minWidth="-Infinity" mnemonicParsing="false" prefWidth="64.0" text="Save" visible="false" AnchorPane.bottomAnchor="4.0" AnchorPane.rightAnchor="140.0" />
             <Label fx:id="loadingLabel" alignment="CENTER" layoutX="264.0" layoutY="231.0" text="Loading Collections..." AnchorPane.bottomAnchor="180.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="200.0" />
+            <ListView fx:id="collectionsCardsContainer" layoutX="77.0" layoutY="100.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="32.0" AnchorPane.leftAnchor="4.0" AnchorPane.rightAnchor="4.0" AnchorPane.topAnchor="63.0" />
          </children></AnchorPane>
     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="400.0" prefWidth="400.0">
          <children>
-            <ScrollPane fitToWidth="true" AnchorPane.bottomAnchor="4.0" AnchorPane.leftAnchor="4.0" AnchorPane.rightAnchor="4.0" AnchorPane.topAnchor="4.0">
-              <content>
-                <AnchorPane minHeight="-Infinity" minWidth="-Infinity">
-                     <children>
-                        <VBox fx:id="recipesCardsContainer" AnchorPane.bottomAnchor="4.0" AnchorPane.leftAnchor="4.0" AnchorPane.rightAnchor="4.0" AnchorPane.topAnchor="4.0" />
-                     </children>
-                  </AnchorPane>
-              </content>
-            </ScrollPane>
+            <ListView fx:id="recipesCardsContainer" layoutX="-30.0" layoutY="82.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="4.0" AnchorPane.leftAnchor="4.0" AnchorPane.rightAnchor="4.0" AnchorPane.topAnchor="4.0" />
          </children></AnchorPane>
   </items>
 </SplitPane>
