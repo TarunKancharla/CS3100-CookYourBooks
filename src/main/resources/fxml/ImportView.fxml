@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox
+    xmlns:fx="http://javafx.com/fxml"
+    fx:controller="app.cookyourbooks.gui.view.ImportViewController"
+    spacing="12">
+  <padding>
+    <Insets top="20" right="20" bottom="20" left="20" />
+  </padding>
+
+  <Label text="Import Recipe" styleClass="view-title" />
+  <Label fx:id="statusLabel" />
+
+  <StackPane>
+    <VBox fx:id="idlePane" spacing="8">
+      <Label text="Select an image to import." />
+      <Button fx:id="chooseImageButton" text="Choose Image" />
+    </VBox>
+
+    <VBox fx:id="processingPane" spacing="8">
+      <Label text="Extracting recipe..." />
+      <ProgressBar fx:id="progressBar" prefWidth="360" />
+      <Button fx:id="cancelButton" text="Cancel" />
+    </VBox>
+
+    <VBox fx:id="reviewPane" spacing="8">
+      <Label text="Review and edit before saving" />
+      <TextField fx:id="titleField" promptText="Recipe title" />
+      <Label text="Ingredients" />
+      <ListView fx:id="ingredientsList" prefHeight="160" />
+      <HBox spacing="8">
+        <Button fx:id="addIngredientButton" text="Add Ingredient" />
+        <Button fx:id="removeIngredientButton" text="Remove Selected" />
+      </HBox>
+      <Label text="Target collection" />
+      <ComboBox fx:id="collectionComboBox" prefWidth="360" />
+      <HBox spacing="8">
+        <Button fx:id="acceptButton" text="Accept" />
+        <Button fx:id="rejectButton" text="Reject" />
+      </HBox>
+    </VBox>
+
+    <VBox fx:id="errorPane" spacing="8">
+      <Label text="Import failed." />
+      <Label fx:id="errorLabel" wrapText="true" />
+      <Button fx:id="errorResetButton" text="Back" />
+    </VBox>
+  </StackPane>
+</VBox>
+

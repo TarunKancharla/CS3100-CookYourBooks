@@ -14,10 +14,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import app.cookyourbooks.CybLibrary;
+import app.cookyourbooks.adapters.GeminiOcrAdapter;
+import app.cookyourbooks.adapters.gemini.RealGeminiClient;
+import app.cookyourbooks.gui.view.ImportViewController;
 import app.cookyourbooks.gui.view.LibraryViewController;
 import app.cookyourbooks.gui.view.MainViewController;
 import app.cookyourbooks.gui.view.RecipeEditorViewController;
 import app.cookyourbooks.gui.view.SearchViewController;
+import app.cookyourbooks.gui.viewmodel.ImportViewModelImpl;
 import app.cookyourbooks.gui.viewmodel.LibraryViewModelImpl;
 import app.cookyourbooks.gui.viewmodel.RecipeEditorViewModelImpl;
 import app.cookyourbooks.gui.viewmodel.SearchViewModelImpl;
@@ -111,6 +115,16 @@ public class CookYourBooksGuiApp extends Application {
       throw new RuntimeException("Failed to load RecipeEditorView.fxml", e);
     }
     // TODO: Wire Import Interface
+    var ocrService = new GeminiOcrAdapter(new RealGeminiClient(System.getenv("GOOGLE_API_KEY")));
+    var importVm = new ImportViewModelImpl(ocrService, librarianService);
+    try {
+      FXMLLoader importLoader = new FXMLLoader(getClass().getResource("/fxml/ImportView.fxml"));
+      importLoader.setControllerFactory(clazz -> new ImportViewController(importVm));
+      Parent importView = importLoader.load();
+      mainController.setViewNode(NavigationService.View.IMPORT, importView);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to load ImportView.fxml", e);
+    }
 
     // ── Wire Search & Filter ──
     var searchVm =
