@@ -55,7 +55,7 @@ public class SearchViewModelImpl implements SearchViewModel {
    * a record here means the View can call {@code result.id()} and {@code result.title()} without
    * depending on the full {@link Recipe} domain object.
    */
-  public record RecipeResult(String id, String title) {}
+  public record RecipeResult(String id, String title, int ingredientCount, int instructionCount) {}
 
   // ── Constructor ───────────────────────────────────────────────────────────
 
@@ -237,7 +237,15 @@ public class SearchViewModelImpl implements SearchViewModel {
             return;
           }
           results.setAll(
-              recipes.stream().map(r -> new RecipeResult(r.getId(), r.getTitle())).toList());
+              recipes.stream()
+                  .map(
+                      r ->
+                          new RecipeResult(
+                              r.getId(),
+                              r.getTitle(),
+                              r.getIngredients().size(),
+                              r.getInstructions().size()))
+                  .toList());
           selectedResultId = results.isEmpty() ? null : results.get(0).id();
           int count = results.size();
           statusMessage.set(

@@ -84,6 +84,25 @@ public class SearchViewController {
     var typedResults =
         (javafx.collections.ObservableList<RecipeResult>) viewModel.resultsProperty();
     resultsList.setItems(typedResults);
+    resultsList.setCellFactory(
+        list ->
+            new javafx.scene.control.ListCell<>() {
+              @Override
+              protected void updateItem(RecipeResult item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                  setText(null);
+                } else {
+                  setText(
+                      item.title()
+                          + "  ("
+                          + item.ingredientCount()
+                          + " ingredients, "
+                          + item.instructionCount()
+                          + " steps)");
+                }
+              }
+            });
 
     // When the user clicks a result, update the ViewModel's selected ID.
     resultsList
