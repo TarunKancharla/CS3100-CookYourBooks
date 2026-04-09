@@ -1,23 +1,10 @@
 package app.cookyourbooks.gui.view;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.*;
 
 import org.jspecify.annotations.Nullable;
 
@@ -38,7 +25,7 @@ public class LibraryViewController {
   private final BooleanProperty undoAvailableProperty;
   private final StringProperty undoMessageProperty;
 
-  @Nullable @FXML private VBox collectionsCardsContainer;
+  @Nullable @FXML private ListView<RecipeCollectionSummary> collectionsCardsContainer;
   @Nullable @FXML private Button newButton;
   @Nullable @FXML private Button saveNewCollectionButton;
   @Nullable @FXML private TextField collectionNameEntry;
@@ -47,113 +34,12 @@ public class LibraryViewController {
   @Nullable @FXML private Label loadingLabel;
   @Nullable @FXML private ScrollPane collectionsPane;
   @Nullable @FXML private TextField filterTextField;
-  @Nullable @FXML private VBox recipesCardsContainer;
+  @Nullable @FXML private ListView<Recipe> recipesCardsContainer;
 
-  private final List<Button> selectButtons;
   private boolean deleteMode = false;
-  @Nullable private Button currentRecipeSelectButton = null;
-
-  /**
-   * Adds a collection card to the VBox containing the collection cards
-   *
-   * @param summary summary of the collection
-   */
-  private void addCollectionCard(RecipeCollectionSummary summary) {
-    if (summary == null || this.collectionsCardsContainer == null) {
-      return;
-    }
-
-    Label titleLabel =
-        new Label("%s (%d recipes)".formatted(summary.title(), summary.recipeCount()));
-
-    TextField titleField = new TextField(summary.title());
-    titleField.setVisible(false);
-    titleField.setManaged(false);
-
-    StackPane titleContainer = new StackPane(titleLabel, titleField);
-    titleContainer.setAlignment(Pos.CENTER_LEFT);
-
-    Button selectButton = new Button(!deleteMode ? "Select" : "Delete");
-    selectButton.setMinWidth(64);
-    selectButton.setPrefWidth(64);
-    selectButton.setMaxWidth(64);
-
-    HBox content = new HBox();
-    content.setAlignment(Pos.CENTER_LEFT);
-    content.setSpacing(8);
-    HBox.setHgrow(titleContainer, Priority.ALWAYS);
-    content.getChildren().addAll(titleContainer, selectButton);
-    content.setPadding(new Insets(0, 4, 0, 4));
-
-    selectButtons.add(selectButton);
-    selectButton.setOnAction(
-        actionEvent -> {
-          if (deleteMode) {
-            if (DialogHandler.showConfirmation(
-                "Confirmation",
-                "Are you sure you want to delete the collection?\n%s".formatted(summary.title()))) {
-              libraryViewModel.deleteCollection(summary.id());
-            }
-            return;
-          }
-
-          selectButtons.forEach(
-              btn -> {
-                btn.setDisable(false);
-                btn.setText("Select");
-              });
-          selectButton.setDisable(true);
-          selectButton.setText("");
-          currentRecipeSelectButton = selectButton;
-          libraryViewModel.selectCollection(summary.id());
-        });
-
-    this.collectionsCardsContainer.getChildren().add(content);
-  }
-
-  private void createRecipeCard(Recipe recipe) {
-    if (recipe == null || this.recipesCardsContainer == null) {
-      return;
-    }
-
-    Label nameLabel = new Label(recipe.getTitle());
-    nameLabel.setMaxWidth(Double.MAX_VALUE);
-    HBox.setHgrow(nameLabel, Priority.ALWAYS);
-
-    Button openButton = new Button("Open");
-    openButton.setMinWidth(64);
-    openButton.setPrefWidth(64);
-    openButton.setMaxWidth(64);
-    openButton.setOnAction(actionEvent -> libraryViewModel.selectRecipe(recipe.getId()));
-
-    HBox card = new HBox(8, nameLabel, openButton);
-    card.setAlignment(Pos.CENTER_LEFT);
-    card.setPadding(new Insets(0, 4, 0, 4));
-    card.setMaxWidth(Double.MAX_VALUE);
-    card.getStyleClass().add("recipe-card");
-
-    this.recipesCardsContainer.getChildren().add(card);
-  }
 
   /** Adds bindings on change for each property. */
   private void addBindings() {
-    // TODO: fix repeated code
-    this.collectionsProperty.addListener(
-        (ListChangeListener<? super RecipeCollectionSummary>)
-            change -> {
-              while (change.next()) {
-                if (change.wasAdded() && this.collectionsCardsContainer != null) {
-                  this.collectionsCardsContainer.getChildren().clear();
-                  change.getAddedSubList().forEach(this::addCollectionCard);
-                }
-
-                if (change.wasRemoved() && this.collectionsCardsContainer != null) {
-                  this.collectionsCardsContainer.getChildren().clear();
-                  change.getAddedSubList().forEach(this::addCollectionCard);
-                }
-              }
-            });
-
     loadingProperty.addListener(
         change -> {
           if (loadingLabel == null || collectionsPane == null) {
@@ -171,17 +57,6 @@ public class LibraryViewController {
           }
           undoDeleteButton.setVisible(undoAvailableProperty.get());
         });
-
-    recipesProperty.addListener(
-        (ListChangeListener<? super Recipe>)
-            change -> {
-              System.out.println(change);
-              if (recipesCardsContainer != null) {
-                recipesCardsContainer.getChildren().clear();
-              }
-              System.out.println(change.getList());
-              change.getList().forEach(this::createRecipeCard);
-            });
 
     System.out.println(undoMessageProperty.toString());
   }
@@ -206,6 +81,90 @@ public class LibraryViewController {
     if (filterTextField == null) {
       throw new IllegalStateException("Filter text field missing.");
     }
+    if (collectionsCardsContainer == null) {
+      throw new IllegalStateException("Collections cards container missing.");
+    }
+    if (recipesCardsContainer == null) {
+      throw new IllegalStateException("Recipes cards container missing.");
+    }
+
+    // bindings for collection cards container
+    collectionsCardsContainer.setCellFactory(
+        lv ->
+            new ListCell<RecipeCollectionSummary>() {
+              @Override
+              protected void updateItem(RecipeCollectionSummary item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                  setText(null);
+                  return;
+                }
+
+                setText(
+                    "%s [%s] %d recipe%s"
+                        .formatted(
+                            item.title(),
+                            switch (item.sourceType()) {
+                              case PUBLISHED_BOOK -> "COOKBOOK";
+                              case PERSONAL -> "PERSONAL";
+                              case WEBSITE -> "WEBSITE";
+                            },
+                            item.recipeCount(),
+                            item.recipeCount() == 1 ? "" : "s"));
+              }
+            });
+
+    collectionsCardsContainer
+        .getSelectionModel()
+        .selectedItemProperty()
+        .addListener(
+            ((observableValue, oldValue, newValue) -> {
+              if (newValue == null) {
+                return;
+              }
+              if (deleteMode
+                  && DialogHandler.showConfirmation(
+                      "Confirmation",
+                      "Are you sure you want to delete this collection?\n%s"
+                          .formatted(newValue.title()))) {
+                libraryViewModel.deleteCollection(newValue.id());
+                return;
+              }
+
+              libraryViewModel.selectCollection(newValue.id());
+            }));
+
+    collectionsCardsContainer.setItems(collectionsProperty);
+
+    // bindings for recipe cards container
+    recipesCardsContainer.setCellFactory(
+        lv ->
+            new ListCell<Recipe>() {
+              @Override
+              protected void updateItem(Recipe item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                  setText(null);
+                  return;
+                }
+
+                setText(item.getTitle());
+              }
+            });
+
+    recipesCardsContainer
+        .getSelectionModel()
+        .selectedItemProperty()
+        .addListener(
+            ((observableValue, oldRecipe, newRecipe) -> {
+              if (newRecipe == null) {
+                return;
+              }
+
+              libraryViewModel.selectRecipe(newRecipe.getId());
+            }));
+
+    recipesCardsContainer.setItems(recipesProperty);
 
     newButton.setOnAction(
         actionEvent -> {
@@ -244,16 +203,6 @@ public class LibraryViewController {
             return;
           }
           deleteMode = !deleteMode;
-
-          selectButtons.forEach(
-              btn -> {
-                btn.setText(!deleteMode ? "Select" : "Delete");
-                btn.setDisable(false);
-              });
-          if (!deleteMode && currentRecipeSelectButton != null) {
-            currentRecipeSelectButton.setText("");
-            currentRecipeSelectButton.setDisable(true);
-          }
           deleteButton.setText(!deleteMode ? "Delete" : "Done");
         });
 
@@ -278,8 +227,6 @@ public class LibraryViewController {
   @SuppressWarnings("unchecked")
   public LibraryViewController(LibraryViewModel libraryViewModel) {
     this.libraryViewModel = libraryViewModel;
-
-    this.selectButtons = new ArrayList<>();
 
     this.collectionsProperty =
         (ObservableList<RecipeCollectionSummary>) libraryViewModel.collectionsProperty();
