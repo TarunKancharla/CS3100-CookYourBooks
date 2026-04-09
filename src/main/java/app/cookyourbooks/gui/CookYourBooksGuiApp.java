@@ -23,9 +23,12 @@ import app.cookyourbooks.gui.view.LibraryViewController;
 import app.cookyourbooks.gui.view.MainViewController;
 import app.cookyourbooks.gui.view.RecipeEditorViewController;
 import app.cookyourbooks.gui.view.SearchViewController;
-import app.cookyourbooks.gui.viewmodel.SearchViewModelImpl;
 import app.cookyourbooks.gui.viewmodel.LibraryViewModelImpl;
+import app.cookyourbooks.gui.viewmodel.RecipeEditorViewModelImpl;
+import app.cookyourbooks.gui.viewmodel.SearchViewModelImpl;
 import app.cookyourbooks.services.LibrarianServiceImpl;
+import app.cookyourbooks.services.ocr.OcrException;
+import app.cookyourbooks.services.ocr.RecipeOcrService;
 
 /**
  * JavaFX entry point for CookYourBooks.
@@ -136,6 +139,22 @@ public class CookYourBooksGuiApp extends Application {
       mainController.setViewNode(NavigationService.View.SEARCH, searchView);
     } catch (IOException e) {
       throw new RuntimeException("Failed to load SearchView.fxml", e);
+    }
+
+    // Wire Import Interface
+    RecipeOcrService ocrService =
+        imagePath -> {
+          throw new OcrException(
+              "OCR not configured");
+        };
+    var importVm = new ImportViewModelImpl(ocrService, librarianService);
+    try {
+      FXMLLoader importLoader = new FXMLLoader(getClass().getResource("/fxml/ImportView.fxml"));
+      importLoader.setControllerFactory(clazz -> new ImportViewController(importVm));
+      Parent importView = importLoader.load();
+      mainController.setViewNode(NavigationService.View.IMPORT, importView);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to load ImportView.fxml", e);
     }
 
     // ── 6. Load the main layout and show the window ──
