@@ -1,8 +1,24 @@
 {
   "collections" : [ {
     "type" : "personal",
+    "id" : "0650a54c-206c-43d4-93bb-0be960ae383d",
+    "title" : "New Collection",
+    "recipes" : [ ],
+    "description" : null,
+    "notes" : null,
+    "sourceType" : "PERSONAL"
+  }, {
+    "type" : "personal",
     "id" : "9ec9109f-f1df-4510-b70a-81544369d817",
     "title" : "New Collection",
+    "recipes" : [ ],
+    "description" : null,
+    "notes" : null,
+    "sourceType" : "PERSONAL"
+  }, {
+    "type" : "personal",
+    "id" : "186e125c-da4b-4aa3-afb7-785a06db7385",
+    "title" : "cookies collecton",
     "recipes" : [ ],
     "description" : null,
     "notes" : null,
