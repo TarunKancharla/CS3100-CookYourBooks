@@ -14,7 +14,6 @@ import javafx.util.Duration;
 
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +33,7 @@ import app.cookyourbooks.services.LibrarianService;
  */
 @DisplayName("LibraryViewModelTests")
 @NullMarked
-public class LibraryViewModelTests {
+public class LibraryViewModelTests extends ViewModelTestBase {
 
   private LibrarianService mockLibrarianService;
   private NavigationService navigationService;
@@ -59,11 +58,6 @@ public class LibraryViewModelTests {
     this.navigationService = mock(NavigationService.class);
     this.libraryViewModel =
         new LibraryViewModelImpl(mockLibrarianService, navigationService, Duration.seconds(5));
-  }
-
-  @BeforeAll
-  static void initJfx() {
-    javafx.application.Platform.startup(() -> {});
   }
 
   @Test

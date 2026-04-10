@@ -3,11 +3,7 @@ package app.cookyourbooks.gui;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +13,6 @@ import app.cookyourbooks.cli.fixtures.RecipeFixtures;
 import app.cookyourbooks.gui.viewmodel.RecipeEditorViewModelImpl;
 import app.cookyourbooks.gui.viewmodel.RecipeEditorViewModelImpl.IngredientEntry;
 import app.cookyourbooks.model.Recipe;
-import app.cookyourbooks.repository.RecipeRepository;
 
 /** Tests for RecipeEditorViewModelImpl requirements E1-E10. */
 class RecipeEditorViewModelImplTest extends ViewModelTestBase {
@@ -186,84 +181,6 @@ class RecipeEditorViewModelImplTest extends ViewModelTestBase {
     vm.save();
     Thread.sleep(100);
     assertThat(repo.saveCalls.get()).isZero();
-  }
-
-  /** Inmemory repository with controls for async save testing. */
-  private static final class InMemoryRecipeRepository implements RecipeRepository {
-    private final AtomicReference<Recipe> stored = new AtomicReference<>();
-    private final AtomicInteger saveCalls = new AtomicInteger();
-    private final CountDownLatch saveCompleted = new CountDownLatch(1);
-    private final CountDownLatch saveStarted = new CountDownLatch(1);
-    private final CountDownLatch releaseSave = new CountDownLatch(1);
-    private final AtomicReference<Thread> saveThread = new AtomicReference<>();
-    private volatile boolean blockOnSave = false;
-    private volatile boolean failOnSave = false;
-
-    private InMemoryRecipeRepository(Recipe initial) {
-      stored.set(initial);
-    }
-
-    @Override
-    public void save(Recipe recipe) {
-      saveCalls.incrementAndGet();
-      saveThread.set(Thread.currentThread());
-      saveStarted.countDown();
-      try {
-        if (blockOnSave) {
-          releaseSave.await(2, TimeUnit.SECONDS);
-        }
-        if (failOnSave) {
-          throw new RuntimeException("repository failure");
-        }
-        stored.set(recipe);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        throw new RuntimeException(e);
-      } finally {
-        saveCompleted.countDown();
-      }
-    }
-
-    @Override
-    public Optional<Recipe> findById(String id) {
-      Recipe current = stored.get();
-      if (current == null) {
-        return Optional.empty();
-      }
-      return current.getId().equals(id) ? Optional.of(current) : Optional.empty();
-    }
-
-    @Override
-    public Optional<Recipe> findByTitle(String title) {
-      Recipe current = stored.get();
-      if (current == null) {
-        return Optional.empty();
-      }
-      return current.getTitle().equalsIgnoreCase(title) ? Optional.of(current) : Optional.empty();
-    }
-
-    @Override
-    public List<Recipe> findAllByTitle(String title) {
-      return findByTitle(title).stream().toList();
-    }
-
-    @Override
-    public List<Recipe> findAll() {
-      Recipe current = stored.get();
-      return current == null ? List.of() : List.of(current);
-    }
-
-    @Override
-    public void delete(String id) {
-      Recipe current = stored.get();
-      if (current != null && current.getId().equals(id)) {
-        stored.set(null);
-      }
-    }
-
-    private void awaitSaveCompletion() throws InterruptedException {
-      saveCompleted.await(2, TimeUnit.SECONDS);
-    }
   }
 
   private void waitUntil(BooleanSupplier condition, long timeoutMs) throws InterruptedException {
