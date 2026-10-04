@@ -1,3 +1,18 @@
+# CookYourBooks
+
+An app to write, store, and filter through recipes.
+
+Built as a group project for CS 3100 (Program Design and Implementation 2) at Northeastern University, Spring 2026.
+
+## My contributions
+- Implemented the search and filter feature, including debounced search so results update smoothly as you type
+
+## Tech
+Java, Gradle
+
+## Running it
+`./gradlew run`
+
 # GA1: CookYourBooks JavaFX GUI
 In this assignment, your team implements the four core GUI features for CookYourBooks. Each team member owns one feature and is individually accountable for their ViewModel and View implementation, which will be manually evaluated by course staff. Teams collaborate on shared infrastructure, integration, and code review. Teams of three may omit the "Search & Filter" feature (as in GA0); the omitted feature is not reassigned—each of the remaining three core features must have one owner, and grading applies only to the features you implement.
 
